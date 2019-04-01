@@ -45,6 +45,7 @@ On the tunnel host, you can find open tunnels in the 52xxx port range using:
     tcp6   0    0 ::1:52001           :::*           LISTEN      31459/sshd: beaconuser
 
 On the tunnel host, you can close tunnels by killing specific sshd processes:
+
     > kill 31459
 
 List of optional arguments:
