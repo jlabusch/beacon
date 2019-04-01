@@ -1,0 +1,127 @@
+#!/bin/bash
+
+# Copyright (C) 2019 Jacques Labuschagne.
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see http://www.gnu.org/licenses/gpl.txt
+
+BEACON_ID=e0fb0955a20e6f6e4e6d5a16cc84dc061
+BEACON_DOMAIN=example.com
+TUNNEL_HOST=tunnel.example.com
+SSH_KEY=${HOME}/.ssh/id_rsa
+SSH_USER=${USER}
+
+eval set -- "$(getopt -o hi:d:t:k:u: -l help,beacon-id:,beacon-domain:,tunnel-host:,ssh-key:,ssh-user: -n beacon -- $@)"
+
+while true; do
+    case "$1" in
+        -i|--beacon-id)
+            BEACON_ID=$2
+            shift 2
+            ;;
+        -d|--beacon-domain)
+            BEACON_DOMAIN=$2
+            shift 2
+            ;;
+        -t|--tunnel-host)
+            TUNNEL_HOST=$2
+            shift 2
+            ;;
+        -k|--ssh-key)
+            SSH_KEY=$2
+            shift 2
+            ;;
+        -u|--ssh-user)
+            SSH_USER=$2
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "NAME"
+            echo "    beacon - Consult a DNS beacon and maybe create a reverse tunnel to a control node"
+            echo
+            echo "SYNOPSIS"
+            echo "    beacon [-h] [-i beacon_id] [-d beacon_domain] [-t tunnel_host] [-k ssh_key] [-u ssh_user]"
+            echo
+            echo "DESCRIPTION"
+            echo "    beacon tells individual nodes in a fleet to create reverse SSH tunnels to a central"
+            echo "    tunnel host when they see a particular signal appear in a DNS beacon."
+            echo
+            echo "    +-------+     +--------+"
+            echo "    | fleet |     | NAT    +---------+"
+            echo "    | node  +-----> gateway|         |"
+            echo "    +-------+     +--------+         |"
+            echo "                               +-----v-------+      +--------------+"
+            echo "                               |             |      |              |"
+            echo "                               | tunnel host <------+ support team |"
+            echo "                               |             |      |              |"
+            echo "                               +-----^-------+      +--------------+"
+            echo "    +-------+     +--------+         |"
+            echo "    | fleet |     | NAT    +---------+"
+            echo "    | node  +-----> gateway|"
+            echo "    +-------+     +--------+"
+            echo
+            echo "    On the DNS server for \${BEACON_DOMAIN}, create a TXT record for"
+            echo "    \${BEACON_ID}.\${BEACON_DOMAIN} with the value of the port the reverse SSH tunnel"
+            echo "    should be created on. (\"52001\" in the example below)"
+            echo "        > dig +noall +answer -t TXT \${BEACON_ID}.\${BEACON_DOMAIN}"
+            echo "        beacon5.example.com. 592 IN TXT \"52001\""
+            echo
+            echo "    On the fleet node, run this script in a cron job and it'll connect if it sees"
+            echo "    the beacon, and skip processing if the tunnel is already up."
+            echo "        > grep beacon /etc/crontab"
+            echo "        */5 *	* * *	beaconuser    /opt/beacon"
+            echo
+            echo "    The fleet node's SSH user must be able to log in to the tunnel host non-interactively:"
+            echo "        > ssh -i \$SSH_KEY -l \$SSH_USER \$TUNNEL_HOST"
+            echo
+            echo "    On the tunnel host, you can find open tunnels in the 52xxx port range using:"
+            echo "        > sudo netstat -tpln | grep ssh | grep 52"
+            echo "        tcp    0    0 127.0.0.1:52001     0.0.0.0:*      LISTEN      31459/sshd: beaconuser"
+            echo "        tcp6   0    0 ::1:52001           :::*           LISTEN      31459/sshd: beaconuser"
+            echo
+            echo "    On the tunnel host, you can close tunnels by killing specific sshd processes:"
+            echo "        > kill 31459"
+            echo
+            echo "    List of optional arguments:"
+            echo
+            echo "        -h, --help"
+            echo "            show this message"
+            echo
+            echo "        -i, --beacon-id=ID"
+            echo "            default is \"$BEACON_ID\""
+            echo
+            echo "        -d, --beacon-domain=DOMAIN"
+            echo "            default is \"$BEACON_DOMAIN\""
+            echo
+            echo "        -t, --tunnel-host=HOST"
+            echo "            default is \"$TUNNEL_HOST\""
+            echo
+            echo "        -k, --ssh-key=PATH"
+            echo "            default is \"$SSH_KEY\""
+            echo
+            echo "        -u, --ssh-user=USER"
+            echo "            default is \"$SSH_USER\""
+            echo
+            echo "AUTHENTICATION"
+            echo "    The tunnels are built on SSH, and beacon does not attempt to manage your SSH keys for you."
+            echo "    The only restriction on keys is that they should be non-interactive, e.g. not requiring"
+            echo "    that a passphrase be entered."
+            echo
+
+            exit 0
+            ;;
+    esac
+done
+
+if screen -list beacon >/dev/null; then
+    echo "Tunnel already running" >&2
+else
+    PORT=$(dig +noall +answer -t TXT ${BEACON_ID}.${BEACON_DOMAIN} | cut -d\" -f2)
+
+    test -n "${PORT}" && test ${PORT} -gt 52000 && \
+        screen -d -m -S beacon ssh -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER} ${TUNNEL_HOST}
+fi
+
