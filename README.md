@@ -1,11 +1,14 @@
-NAME
+# NAME
+
     beacon - Consult a DNS beacon and maybe create a reverse tunnel to a control node
 
-SYNOPSIS
+# SYNOPSIS
+
     beacon [-h] [-i beacon_id] [-d beacon_domain] [-t tunnel_host] [-u user]
            [-k ssh_key] [-s ssh_user] [--install]
 
-DESCRIPTION
+# DESCRIPTION
+
     beacon tells individual nodes in a fleet to create reverse SSH tunnels to a central
     tunnel host when they see a particular signal appear in a DNS beacon.
 
@@ -78,7 +81,8 @@ DESCRIPTION
         --user=USER, -u
             user to execute the cron job as; default is "jacques"
 
-AUTHENTICATION
+# AUTHENTICATION
+
     The tunnels are built on SSH, and beacon does not attempt to manage your SSH keys for you.
     The only restriction on keys is that they should be non-interactive, e.g. not requiring
     that a passphrase be entered.
