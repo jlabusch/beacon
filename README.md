@@ -1,14 +1,13 @@
-# NAME
+NAME
+    beacon - Consult a DNS beacon and maybe create a reverse tunnel to a control node
 
-beacon - Consult a DNS beacon and maybe create a reverse tunnel to a control node
+SYNOPSIS
+    beacon [-h] [-i beacon_id] [-d beacon_domain] [-t tunnel_host] [-u user]
+           [-k ssh_key] [-s ssh_user] [--install]
 
-# SYNOPSIS
-
-`beacon [-h] [-i beacon_id] [-d beacon_domain] [-t tunnel_host] [-k ssh_key] [-u ssh_user]`
-
-# DESCRIPTION
-
-`beacon` tells individual nodes in a fleet to create reverse SSH tunnels to a central tunnel host when they see a particular signal appear in a DNS beacon.
+DESCRIPTION
+    beacon tells individual nodes in a fleet to create reverse SSH tunnels to a central
+    tunnel host when they see a particular signal appear in a DNS beacon.
 
     +-------+     +--------+
     | fleet |     | NAT    +---------+
@@ -24,50 +23,62 @@ beacon - Consult a DNS beacon and maybe create a reverse tunnel to a control nod
     | node  +-----> gateway|
     +-------+     +--------+
 
-On the DNS server for ${BEACON_DOMAIN}, create a TXT record for `${BEACON_ID}.${BEACON_DOMAIN}` with the value of the port the reverse SSH tunnel should be created on. ("52001" in the example below)
+    On the DNS server for "example.com", create a TXT record for
+    "e0fb0955a.example.com" with the value of the
+    port the reverse SSH tunnel should be created on ("52001" below):
 
-    > dig +noall +answer -t TXT ${BEACON_ID}.${BEACON_DOMAIN}
-    beacon5.example.com. 592 IN TXT "52001"
+        > dig +noall +answer -t TXT e0fb0955a.example.com
+        e0fb0955a.example.com. 592 IN TXT "52001"
 
-On the fleet node, run this script in a cron job and it'll connect if it sees the beacon, and skip processing if the tunnel is already up.
+    On the fleet node, run this script in a cron job and it'll connect if it sees
+    the beacon, and skip processing if the tunnel is already up.
 
-    > grep beacon /etc/crontab
-    */5 *	* * *	beaconuser    /opt/beacon
+        > grep beacon /etc/crontab
+        */5 *	* * *	jacques    /home/jacques/src/beacon/beacon
 
-The fleet node's SSH user must be able to log in to the tunnel host non-interactively:
+    The fleet node's SSH user must be able to log in to the tunnel host non-interactively:
 
-    > ssh -i $SSH_KEY -l $SSH_USER $TUNNEL_HOST
+        > ssh -i /home/jacques/.ssh/id_rsa -l jacques tunnel.example.com
 
-On the tunnel host, you can find open tunnels in the 52xxx port range using:
+    On the tunnel host, you can find open tunnels in the 52xxx port range using:
 
-    > sudo netstat -tpln | grep ssh | grep 52
-    tcp    0    0 127.0.0.1:52001     0.0.0.0:*      LISTEN      31459/sshd: beaconuser
-    tcp6   0    0 ::1:52001           :::*           LISTEN      31459/sshd: beaconuser
+        > sudo netstat -tpln | grep ssh | grep -E ':52[0-9]{3}'
+        tcp    0    0 127.0.0.1:52001     0.0.0.0:*      LISTEN      31459/sshd: beaconuser
+        tcp6   0    0 ::1:52001           :::*           LISTEN      31459/sshd: beaconuser
 
-On the tunnel host, you can close tunnels by killing specific sshd processes:
+    On the tunnel host, you can close tunnels by killing specific sshd processes:
 
-    > kill 31459
+        > kill 31459
 
-List of optional arguments:
+    List of optional arguments:
 
-    -h, --help
-        show this message
+        --beacon-domain=DOMAIN, -d
+            default is "example.com"
 
-    -i, --beacon-id=ID
-        default is "e0fb0955a20e6f6e4e6d5a16cc84dc061" (which has no special significance)
+        --beacon-id=ID, -i
+            default is "e0fb0955a"
 
-    -d, --beacon-domain=DOMAIN
-        default is "example.com"
+        --help, -h
+            show this message
 
-    -t, --tunnel-host=HOST
-        default is "tunnel.example.com"
+        --install
+            install beacon into /etc/crontab, to be run as jacques in 5 minute
+            intervals and taking additional command line options into account when
+            configuring the job (-c, -d, -i, -k, -u, -t)
 
-    -k, --ssh-key=PATH
-        default is "~/.ssh/id_rsa"
+        --ssh-key=PATH, -k
+            default is "/home/jacques/.ssh/id_rsa"
 
-    -u, --ssh-user=USER
-        default is "$USER"
+        --ssh-user=USER, -s
+            default is "jacques"
 
-# AUTHENTICATION
+        --tunnel-host=HOST, -t
+            default is "tunnel.example.com"
 
-The tunnels are built on SSH, and beacon does not attempt to manage your SSH keys for you. The only restriction on keys is that they should be non-interactive, e.g. not requiring that a passphrase be entered.
+        --user=USER, -u
+            user to execute the cron job as; default is "jacques"
+
+AUTHENTICATION
+    The tunnels are built on SSH, and beacon does not attempt to manage your SSH keys for you.
+    The only restriction on keys is that they should be non-interactive, e.g. not requiring
+    that a passphrase be entered.
