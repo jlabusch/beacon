@@ -34,11 +34,11 @@ On the fleet node, run this script in a cron job and it'll connect if it sees
 the beacon, and skip processing if the tunnel is already up.
 
         > grep beacon /etc/crontab
-        */5 *	* * *	jacques    /home/jacques/src/beacon/beacon
+        */5 *	* * *	beaconuser    /opt/beacon
 
 The fleet node's SSH user must be able to log in to the tunnel host non-interactively:
 
-        > ssh -i /home/jacques/.ssh/id_rsa -l jacques tunnel.example.com
+        > ssh -i /home/beaconuser/.ssh/id_rsa -l beaconuser tunnel.example.com
 
 On the tunnel host, you can find open tunnels in the 52xxx port range using:
 
@@ -62,21 +62,21 @@ List of optional arguments:
         show this message
 
     --install
-        install beacon into /etc/crontab, to be run as jacques in 5 minute
+        install beacon into /etc/crontab, to be run as beaconuser in 5 minute
         intervals and taking additional command line options into account when
         configuring the job (-c, -d, -i, -k, -u, -t)
 
     --ssh-key=PATH, -k
-        default is "/home/jacques/.ssh/id_rsa"
+        default is "/home/beaconuser/.ssh/id_rsa"
 
     --ssh-user=USER, -s
-        default is "jacques"
+        default is "beaconuser"
 
     --tunnel-host=HOST, -t
         default is "tunnel.example.com"
 
     --user=USER, -u
-        user to execute the cron job as; default is "jacques"
+        user to execute the cron job as; default is "beaconuser"
 
 # AUTHENTICATION
 
