@@ -8,6 +8,7 @@ BEACON_ID=e0fb0955a
 BEACON_DOMAIN=example.com
 TUNNEL_HOST=tunnel.example.com
 SSH_KEY=${HOME}/.ssh/id_rsa
+INTERACTIVE=N
 # Don't define SSH_USER and CMD_USER yet
 
 read -r -d "" HELPTEXT << EOF
@@ -16,25 +17,25 @@ NAME
 
 SYNOPSIS
     beacon [-h] [-i beacon_id] [-d beacon_domain] [-t tunnel_host] [-u user]
-           [-k ssh_key] [-s ssh_user] [--install]
+           [-k ssh_key] [-s ssh_user] [--install] [--interactive]
 
 DESCRIPTION
     beacon tells individual nodes in a fleet to create reverse SSH tunnels to a central
     tunnel host when they see a particular signal appear in a DNS beacon.
 
-    +-------+     +--------+
-    | fleet |     | NAT    +---------+
-    | node  +-----> gateway|         |
-    +-------+     +--------+         |
-                               +-----v-------+      +--------------+
-                               |             |      |              |
-                               | tunnel host <------+ support team |
-                               |             |      |              |
-                               +-----^-------+      +--------------+
-    +-------+     +--------+         |
-    | fleet |     | NAT    +---------+
-    | node  +-----> gateway|
-    +-------+     +--------+
+        +-------+     +--------+
+        | fleet |     | NAT    +---------+
+        | node  +-----> gateway|         |
+        +-------+     +--------+         |
+                                   +-----v-------+      +--------------+
+                                   |             |      |              |
+                                   | tunnel host <------+ support team |
+                                   |             |      |              |
+                                   +-----^-------+      +--------------+
+        +-------+     +--------+         |
+        | fleet |     | NAT    +---------+
+        | node  +-----> gateway|
+        +-------+     +--------+
 
     On the DNS server for "${BEACON_DOMAIN}", create a TXT record for
     "${BEACON_ID}.${BEACON_DOMAIN}" with the value of the
@@ -79,6 +80,10 @@ DESCRIPTION
             intervals and taking additional command line options into account when
             configuring the job (-c, -d, -i, -k, -u, -t)
 
+        --interactive
+            run interactively, i.e. without putting the tunnel in a detached screen session
+            (ignored with --install)
+
         --ssh-key=PATH, -k
             default is "${SSH_KEY}"
 
@@ -98,7 +103,7 @@ AUTHENTICATION
 
 EOF
 
-eval set -- "$(getopt -o hi:d:t:k:u:s: -l help,install,user:,beacon-id:,beacon-domain:,tunnel-host:,ssh-key:,ssh-user: -n beacon -- $@)"
+eval set -- "$(getopt -o hi:d:t:k:u:s: -l help,install,user:,beacon-id:,beacon-domain:,tunnel-host:,ssh-key:,ssh-user:interactive -n beacon -- $@)"
 
 while true; do
     case "$1" in
@@ -108,6 +113,10 @@ while true; do
             ;;
         --install)
             INSTALL=Y
+            shift
+            ;;
+        --interactive)
+            INTERACTIVE=Y
             shift
             ;;
         -d|--beacon-domain)
@@ -144,8 +153,14 @@ done
 function run_beacon(){
     PORT=$(dig +noall +answer -t TXT ${BEACON_ID}.${BEACON_DOMAIN} | cut -d\" -f2)
 
-    test -n "${PORT}" && test ${PORT} -gt 52000 && \
-        screen -d -m -S beacon ssh -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
+    if [ -n "${PORT}" ] && [ ${PORT} -gt 52000 ]; then
+        if [ "${INTERACTIVE}" = "Y" ]; then
+            screen -d -m -S beacon \
+            ssh -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
+        else
+            ssh -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
+        fi
+    fi
 }
 
 function install_beacon(){
