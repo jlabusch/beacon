@@ -4,52 +4,39 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see http://www.gnu.org/licenses/gpl.txt
 
-CURL=$(which curl)
-if [ -z "${CURL}" ]; then
-    echo 'Please install "curl" first' >&2
-    exit 1
-fi
-
-SCREEN=$(which screen)
-if [ -z "${SCREEN}" ]; then
-    echo 'Please install "screen" first' >&2
-    exit 1
-fi
+BEACON=/usr/local/bin/beacon
 
 function error(){
     echo "$1" >&2
     exit 1
 }
 
-BEACON=/usr/local/bin/beacon
+test -f /etc/lsb-release && source /etc/lsb-release
+
+function install_dep_or_quit(){
+    case "${DISTRIB_ID}" in
+        Ubuntu)
+            echo "Missing \"$1\"; trying to install" >&2
+            apt-get update && apt-get install "$1" || error "Couldn't install $1"
+            ;;
+        *)
+            error "Please install \"$1\" first"
+            ;;
+    esac
+}
+
+for i in curl screen; do
+    DEP=$(which $i)
+    if [ -z "${DEP}" ]; then
+        install_dep_or_quit $i
+    fi
+done
 
 echo "Installing beacon as ${BEACON}"
 
-curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.2/beacon > ${BEACON} || error "Couldn't download beacon script"
+curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.3/beacon > ${BEACON} || error "Couldn't download beacon script"
 chmod 755 ${BEACON}
 
-ID_DEFAULT=33ec8ae
-DOMAIN_DEFAULT=example.com
-SSH_KEY_DEFAULT=${HOME}/.ssh/id_rsa
-TUNNEL_DEFAULT=tunnel.example.com
-
-echo
-echo    "Beacon configuration"
-echo    "--------------------"
-echo
-read -p "  Beacon ID (default ${ID_DEFAULT}) - " ID
-read -p "  Beacon domain (default ${DOMAIN_DEFAULT}) - " DOMAIN
-read -p "  Beacon cron job username (default ${USER}) - " CRON_USER
-read -p "  SSH key (default ${SSH_KEY_DEFAULT}) - " SSH_KEY
-read -p "  SSH user (default same as cron user) - " SSH_USER
-read -p "  Tunnel host name (default ${TUNNEL_DEFAULT}) - " TUNNEL
-
-${BEACON} --install \
-    --beacon-id ${ID:-${ID_DEFAULT}} \
-    --beacon-domain ${DOMAIN:-${DOMAIN_DEFAULT}} \
-    --ssh-key ${SSH_KEY:-${SSH_KEY_DEFAULT}} \
-    --ssh-user ${SSH_USER:-${CRON_USER:-${USER}}} \
-    --user ${CRON_USER:-${USER}} \
-    --tunnel-host ${TUNNEL:-${TUNNEL_DEFAULT}}
+exec ${BEACON} --webinstall
 
 

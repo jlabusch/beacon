@@ -68,7 +68,7 @@ DESCRIPTION
 INSTALLATION
     The easiest way to install beacon is with the interactive installer:
 
-        curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.2/webinstall | sudo bash
+        curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.3/webinstall | sudo bash
 
     The installer will create /usr/local/bin/beacon, prompt for configuration and
     add the job to /etc/crontab.
@@ -106,6 +106,10 @@ USAGE
         --user=USER, -u
             user to execute the cron job as; default is "${CMD_USER:-${USER}}"
 
+        --uninstall
+            remove beacon from the crontab but leave the actual script in place on
+            the filesystem
+
 AUTHENTICATION
     The tunnels are built on SSH, and beacon does not attempt to manage your SSH keys for you.
     The only restriction on keys is that they should be non-interactive, e.g. not requiring
@@ -113,7 +117,7 @@ AUTHENTICATION
 
 EOF
 
-eval set -- "$(getopt -o hi:d:t:k:u:s: -l help,install,user:,beacon-id:,beacon-domain:,tunnel-host:,ssh-key:,ssh-user:,interactive -n beacon -- $@)"
+eval set -- "$(getopt -o hi:d:t:k:u:s: -l help,uninstall,install,webinstall,user:,beacon-id:,beacon-domain:,tunnel-host:,ssh-key:,ssh-user:,interactive -n beacon -- $@)"
 
 while true; do
     case "$1" in
@@ -123,6 +127,14 @@ while true; do
             ;;
         --install)
             INSTALL=Y
+            shift
+            ;;
+        --uninstall)
+            UNINSTALL=Y
+            shift
+            ;;
+        --webinstall)
+            WEBINSTALL=Y
             shift
             ;;
         --interactive)
@@ -173,6 +185,58 @@ function run_beacon(){
     fi
 }
 
+function uninstall_beacon(){
+    local crontab="/etc/crontab"
+    local fullpath=$(realpath $0)
+    local escaped_path=$(echo "${fullpath}" | sed 's/\//\\\//g')
+
+    if grep -q ${fullpath} ${crontab}; then
+        echo "Removing ${fullpath} from ${crontab}"
+        sed -i "s/.*$escaped_path.*//g" ${crontab}
+    fi
+}
+
+function webinstall(){
+    # webinstall is probably a curl|bash situation which means STDIN is a
+    # pipe and we can't gather interactive input.
+    # This hack will fail if STDERR has been redirected somewhere else, but
+    # life is full of disappointments.
+    exec 0<$(realpath /proc/self/fd/2)
+
+    read -p "  [config] Beacon ID - " ID
+    if [ -n "${ID}" ]; then BEACON_ID="${ID}"; fi
+
+    read -p "  [config] Beacon domain (default ${BEACON_DOMAIN}) - " DOMAIN
+    if [ -n "${DOMAIN}" ]; then BEACON_DOMAIN="${DOMAIN}"; fi
+
+    read -p "  [config] Beacon cron job username (default ${CMD_USER:-${USER}}) - " CU
+    if [ -n "${CU}" ]; then CMD_USER="${CU}"; fi
+
+    read -p "  [config] SSH key (default ${SSH_KEY}) - " SK
+    if [ -n "${SK}" ]; then SSH_KEY="${SK}"; fi
+
+    read -p "  [config] SSH user (default same as cron user) - " SU
+    if [ -n "${SU}" ]; then SSH_USER="${SU}"; fi
+
+    read -p "  [config] Tunnel host name (default ${TUNNEL_HOST}) - " TH
+    if [ -n "${TH}" ]; then TUNNEL_HOST="${TH}"; fi
+
+    if [ -z "${ID}" ]; then
+        # It's weird they didn't enter a unique ID. Are we really capturing
+        # interactive input?
+        read -p "> Enter Y to complete installation: " CONT
+        if [ "${CONT}" != "Y" ]; then
+            if [ -z "${CONT}" ]; then
+                echo "Couldn't gather config input; please try running \"beacon --install\" manually."
+            fi
+            echo "> Aborting"
+            exit 1
+        fi
+    fi
+
+    install_beacon
+}
+
 function install_beacon(){
     local crontab="/etc/crontab"
     local fullpath=$(realpath $0)
@@ -190,7 +254,11 @@ function install_beacon(){
     echo -e "*/5 * * * *    ${CMD_USER:-${USER}}    ${fullpath} -d ${BEACON_DOMAIN} -i ${BEACON_ID} -k $(realpath ${SSH_KEY}) -s ${SSH_USER:-${CMD_USER:-${USER}}} -t ${TUNNEL_HOST}" >> ${crontab}
 }
 
-if [ -n "${INSTALL}" ]; then
+if [ -n "${UNINSTALL}" ]; then
+    uninstall_beacon
+elif [ -n "${WEBINSTALL}" ]; then
+    webinstall
+elif [ -n "${INSTALL}" ]; then
     install_beacon
 else
     if screen -list beacon >/dev/null; then
