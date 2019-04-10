@@ -58,7 +58,7 @@ On the tunnel host, you can close tunnels by killing specific sshd processes:
 
 The easiest way to install beacon is with the interactive installer:
 
-    curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.0/webinstall | sudo bash
+    curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.1/webinstall | sudo bash
 
 The installer will create /usr/local/bin/beacon, prompt for configuration and
 add the job to /etc/crontab.
