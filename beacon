@@ -103,7 +103,7 @@ AUTHENTICATION
 
 EOF
 
-eval set -- "$(getopt -o hi:d:t:k:u:s: -l help,install,user:,beacon-id:,beacon-domain:,tunnel-host:,ssh-key:,ssh-user:interactive -n beacon -- $@)"
+eval set -- "$(getopt -o hi:d:t:k:u:s: -l help,install,user:,beacon-id:,beacon-domain:,tunnel-host:,ssh-key:,ssh-user:,interactive -n beacon -- $@)"
 
 while true; do
     case "$1" in
