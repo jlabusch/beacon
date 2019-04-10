@@ -155,9 +155,9 @@ function run_beacon(){
 
     if [ -n "${PORT}" ] && [ ${PORT} -gt 52000 ]; then
         if [ "${INTERACTIVE}" = "Y" ]; then
-            screen -d -m -S beacon \
             ssh -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
         else
+            screen -d -m -S beacon \
             ssh -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
         fi
     fi
