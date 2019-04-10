@@ -25,7 +25,7 @@ BEACON=/usr/local/bin/beacon
 
 echo "Installing beacon as ${BEACON}"
 
-curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.1/beacon > ${BEACON} || error "Couldn't download beacon script"
+curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.2/beacon > ${BEACON} || error "Couldn't download beacon script"
 chmod 755 ${BEACON}
 
 ID_DEFAULT=33ec8ae
