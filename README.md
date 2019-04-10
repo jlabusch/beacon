@@ -4,8 +4,8 @@ beacon - Consult a DNS beacon and maybe create a reverse tunnel to a control nod
 
 # SYNOPSIS
 
-    
-    
+    beacon [-h] [-i beacon_id] [-d beacon_domain] [-t tunnel_host] [-u user]
+           [-k ssh_key] [-s ssh_user] [--install] [--interactive]
 
 # DESCRIPTION
 
