@@ -50,9 +50,13 @@ On the tunnel host, you can find open tunnels in the 52xxx port range using:
     tcp    0    0 127.0.0.1:52001     0.0.0.0:*      LISTEN      31459/sshd: beaconuser
     tcp6   0    0 ::1:52001           :::*           LISTEN      31459/sshd: beaconuser
 
-On the tunnel host, you can close tunnels by killing specific sshd processes:
+You can then connect to the worker node using:
 
-    > kill 31459
+    > ssh localhost -p 52001
+
+You can close tunnels from the tunnel host end by killing specific sshd processes:
+
+    > kill 31459 # PID from the example above
 
 # INSTALLATION
 
