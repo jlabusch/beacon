@@ -20,22 +20,22 @@ SYNOPSIS
            [-k ssh_key] [-s ssh_user] [--install] [--interactive]
 
 DESCRIPTION
-    beacon tells individual nodes in a fleet to create reverse SSH tunnels to a central
-    tunnel host when they see a particular signal appear in a DNS beacon.
+    beacon tells individual worker nodes in a fleet to create reverse SSH tunnels to
+    a central tunnel host when they see a particular signal appear in a DNS beacon.
 
-        +-------+     +--------+
-        | fleet |     | NAT    +---------+
-        | node  +-----> gateway|         |
-        +-------+     +--------+         |
-                                   +-----v-------+      +--------------+
-                                   |             |      |              |
-                                   | tunnel host <------+ support team |
-                                   |             |      |              |
-                                   +-----^-------+      +--------------+
-        +-------+     +--------+         |
-        | fleet |     | NAT    +---------+
-        | node  +-----> gateway|
-        +-------+     +--------+
+        +--------+     +--------+
+        | worker |     | NAT    +---------+
+        | node   +-----> gateway|         |
+        +--------+     +--------+         |
+                                    +-----v-------+      +--------------+
+                                    |             |      |              |
+                                    | tunnel host <------+ support team |
+                                    |             |      |              |
+                                    +-----^-------+      +--------------+
+        +--------+     +--------+         |
+        | worker |     | NAT    +---------+
+        | node   +-----> gateway|
+        +--------+     +--------+
 
     On the DNS server for "${BEACON_DOMAIN}", create a TXT record for
     "${BEACON_ID}.${BEACON_DOMAIN}" with the value of the
@@ -44,13 +44,14 @@ DESCRIPTION
         > dig +noall +answer -t TXT ${BEACON_ID}.${BEACON_DOMAIN}
         ${BEACON_ID}.${BEACON_DOMAIN}. 592 IN TXT "52001"
 
-    On the fleet node, run this script in a cron job and it'll connect if it sees
-    the beacon, and skip processing if the tunnel is already up.
+    On the worker node, run this script in a cron job and it'll connect if it sees
+    the beacon, and skip processing if the tunnel is already up. (See INSTALLATION
+    section for more.)
 
         > grep beacon /etc/crontab
-        */5 *	* * *	${CMD_USER:-${USER}}    $(realpath $0)
+        */5 * * * *    ${CMD_USER:-${USER}}    $(realpath $0)
 
-    The fleet node's SSH user must be able to log in to the tunnel host non-interactively:
+    The worker node's SSH user must be able to log in to the tunnel host non-interactively:
 
         > ssh -i ${SSH_KEY} -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
 
@@ -64,6 +65,15 @@ DESCRIPTION
 
         > kill 31459
 
+INSTALLATION
+    The easiest way to install beacon is with the interactive installer:
+
+        curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.0/webinstall | sudo bash
+
+    The installer will create /usr/local/bin/beacon, prompt for configuration and
+    add the job to /etc/crontab.
+
+USAGE
     List of optional arguments:
 
         --beacon-domain=DOMAIN, -d
