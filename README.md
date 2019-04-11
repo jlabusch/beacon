@@ -38,11 +38,11 @@ the beacon, and skip processing if the tunnel is already up. (See INSTALLATION
 section for more.)
 
     > grep beacon /etc/crontab
-    */5 * * * *    jacques    /home/jacques/src/beacon/beacon
+    */5 * * * *    myuser    /usr/local/bin/beacon -i e0fb0955a [...]
 
-The worker node's SSH user must be able to log in to the tunnel host non-interactively:
+The worker node's SSH user must be able to log in to the tunnel host non-interactively, e.g.:
 
-    > ssh -i /home/jacques/.ssh/id_rsa -l jacques tunnel.example.com
+    > ssh -i /home/myuser/.ssh/id_rsa -l myuser tunnel.example.com
 
 On the tunnel host, you can find open tunnels in the 52xxx port range using:
 
@@ -50,7 +50,7 @@ On the tunnel host, you can find open tunnels in the 52xxx port range using:
     tcp    0    0 127.0.0.1:52001     0.0.0.0:*      LISTEN      31459/sshd: beaconuser
     tcp6   0    0 ::1:52001           :::*           LISTEN      31459/sshd: beaconuser
 
-You can then connect to the worker node using:
+You can then connect to the worker node from the tunnel host using:
 
     > ssh localhost -p 52001
 
@@ -90,16 +90,16 @@ List of optional arguments:
         (ignored with --install)
 
     --ssh-key=PATH, -k
-        default is "/home/jacques/.ssh/id_rsa"
+        default is `~/.ssh/id_rsa`
 
     --ssh-user=USER, -s
-        default is "jacques"
+        default is that of --user or $USER
 
     --tunnel-host=HOST, -t
         default is "tunnel.example.com"
 
     --user=USER, -u
-        user to execute the cron job as; default is "jacques"
+        user to execute the cron job as; default is $USER
 
     --uninstall
         remove beacon from the crontab but leave the actual script in place on
