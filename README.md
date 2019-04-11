@@ -26,9 +26,9 @@ a central tunnel host when they see a particular signal appear in a DNS beacon.
     | node   +-----> gateway|
     +--------+     +--------+
 
-On the DNS server for "example.com", create a TXT record for
-"e0fb0955a.example.com" with the value of the
-port the reverse SSH tunnel should be created on ("52001" below):
+On the DNS server for `example.com`, create a TXT record for
+`e0fb0955a.example.com` with the value of the
+port the reverse SSH tunnel should be created on (`52001` below):
 
     > dig +noall +answer -t TXT e0fb0955a.example.com
     e0fb0955a.example.com. 592 IN TXT "52001"
@@ -90,7 +90,7 @@ List of optional arguments:
         (ignored with --install)
 
     --ssh-key=PATH, -k
-        default is `~/.ssh/id_rsa`
+        default is ~/.ssh/id_rsa
 
     --ssh-user=USER, -s
         default is that of --user or $USER
