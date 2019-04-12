@@ -34,7 +34,7 @@ done
 
 echo "Installing beacon as ${BEACON}"
 
-curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.3/beacon > ${BEACON} || error "Couldn't download beacon script"
+curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.4/beacon > ${BEACON} || error "Couldn't download beacon script"
 chmod 755 ${BEACON}
 
 exec ${BEACON} --webinstall

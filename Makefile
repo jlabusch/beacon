@@ -1,7 +1,8 @@
 README.md: beacon
 	@echo Updating README.md
-	@./$< -h | \
+	@MARKDOWN=Y ./$< -h | \
         perl -p -e 's/^([A-Z][A-Z]+.*)$$/# $$1\n/'  | \
         sed 's/^    //' | \
-        perl -p -e 's/(.*\[.*\[.*\[.*)/    $$1/' > $@
+        perl -pe 's/(.*\[.*\[.*\[.*)/    $$1/'| \
+        perl -0pe 's/-\R([a-zA-Z0-9])/-$$1/gms' > $@
 
