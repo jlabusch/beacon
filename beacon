@@ -83,7 +83,7 @@ DESCRIPTION
 INSTALLATION
     The easiest way to install beacon is with the interactive installer:
 
-        curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.4/webinstall | sudo bash
+        curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.5/webinstall | sudo bash
 
     The installer will create ${H_TT_b}/usr/local/bin/beacon${H_TT_b}, prompt for configuration and
     add the job to ${H_TT_b}/etc/crontab${H_TT_b}.
@@ -201,10 +201,12 @@ function run_beacon(){
 
     if [ -n "${PORT}" ] && [ ${PORT} -gt 52000 ]; then
         if [ "${INTERACTIVE}" = "Y" ]; then
-            ssh -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
+            # Turning off strict host key checking is bad; we only do it
+            # because the very first connection can't capture user input.
+            ssh -o "StrictHostKeyChecking no" -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
         else
             screen -d -m -S beacon \
-            ssh -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
+            ssh -o "StrictHostKeyChecking no" -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
         fi
     fi
 }
