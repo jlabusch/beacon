@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Copyright (C) 2019 Jacques Labuschagne.
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see http://www.gnu.org/licenses/gpl.txt
+
+DOMAIN=${DOMAIN:-example.com}
+
+if [ "$*" = "" ]; then
+    echo "Usage: $0 <beacon-id> [<beacon-id> ...]"
+    echo
+    echo "lstun is used on the tunnel host to list tunnel statuses."
+    echo "It assumes that all tunnels are in the 52xxx port range."
+    echo "You can change the beacon domain using the DOMAIN environment"
+    echo "variable (currently \"${DOMAIN}\")"
+    exit 1
+fi
+
+OPEN_PORTS="$(sudo netstat -ntlp | grep ssh | grep -E ':52[0-9]{3}' | perl -pe 's/.*:(52\d{3}).*\/ssh.*/$1/' | sort | uniq | tr '\n' '|')x"
+for i in $*; do
+    printf "$i: "
+    dig +short -t TXT $i.${DOMAIN} | grep -q -E ${OPEN_PORTS} && echo "open" || echo "closed"
+done
