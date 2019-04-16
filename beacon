@@ -83,7 +83,7 @@ DESCRIPTION
 INSTALLATION
     The easiest way to install beacon is with the interactive installer:
 
-        curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.5/webinstall | sudo bash
+        curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.6/webinstall | sudo bash
 
     The installer will create ${H_TT_b}/usr/local/bin/beacon${H_TT_b}, prompt for configuration and
     add the job to ${H_TT_b}/etc/crontab${H_TT_b}.
@@ -196,18 +196,18 @@ while true; do
     esac
 done
 
-function run_beacon(){
+function get_port_from_dns(){
     PORT=$(dig +noall +answer -t TXT ${BEACON_ID}.${BEACON_DOMAIN} | cut -d\" -f2)
+}
 
-    if [ -n "${PORT}" ] && [ ${PORT} -gt 52000 ]; then
-        if [ "${INTERACTIVE}" = "Y" ]; then
-            # Turning off strict host key checking is bad; we only do it
-            # because the very first connection can't capture user input.
-            ssh -o "StrictHostKeyChecking no" -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
-        else
-            screen -d -m -S beacon \
-            ssh -o "StrictHostKeyChecking no" -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
-        fi
+function run_beacon(){
+    if [ "${INTERACTIVE}" = "Y" ]; then
+        # Turning off strict host key checking is bad; we only do it
+        # because the very first connection can't capture user input.
+        ssh -o "StrictHostKeyChecking no" -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
+    else
+        screen -d -m -S beacon \
+        ssh -o "StrictHostKeyChecking no" -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
     fi
 }
 
@@ -287,10 +287,18 @@ elif [ -n "${WEBINSTALL}" ]; then
 elif [ -n "${INSTALL}" ]; then
     install_beacon
 else
+    get_port_from_dns
     if screen -list beacon >/dev/null; then
-        echo "Tunnel already running" >&2
+        if [ -z "${PORT}" ]; then
+            echo "Tunnel DNS beacon no longer present; closing" >&2
+            kill $(pidof ssh)
+        else
+            echo "Tunnel already running" >&2
+        fi
     else
-        run_beacon
+        if [ -n "${PORT}" ] && [ ${PORT} -gt 52000 ]; then
+            run_beacon
+        fi
     fi
 fi
 
