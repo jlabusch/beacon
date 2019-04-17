@@ -20,5 +20,9 @@ OPEN_PORTS="$(sudo netstat -ntlp | grep ssh | grep -E ':52[0-9]{3}' | perl -pe '
 for i in $*; do
     printf "$i:\t"
     PORT=$(dig +short -t TXT $i.${DOMAIN} | tr -d '"')
-    echo "${PORT}" | grep -q -E "${OPEN_PORTS}" && echo "open on ${PORT}" || echo "closed"
+    if echo "${PORT}" | grep -q -E "52[0-9]{3}"; then
+        echo "${PORT}" | grep -q -E "${OPEN_PORTS}" && echo "${PORT} open" || echo "${PORT} closed"
+    else
+        echo "not requested"
+    fi
 done
