@@ -80,6 +80,24 @@ DESCRIPTION
 
         > kill 31459 # PID from the example above
 
+PROXYING WEB APPLICATIONS
+    Shells are nice, but sometimes you want to be able to see a web interface.
+
+    Here's how we did it:
+
+        # on tunnel host, create a SOCKS proxy from local port
+        # 51800 (chosen randomly) to the worker node on 52001
+        > ssh -D 51800 -N -p 52001 localhost
+
+        # on your workstation, create an SSH tunnel to the SOCKS proxy
+        > ssh -N -L 51800:localhost:51800 tunnel_host.mydomain.com
+
+        # Now tell your browser to use the local proxy
+        curl -x socks5://localhost:51800 \$REMOTE_URI
+
+    Browsers can be a bit funny about SOCKS5 proxies, and if you're using
+    Firefox I'd immediately recommend using something like FoxyProxy. YMMV.
+
 INSTALLATION
     The easiest way to install beacon is with the interactive installer:
 
