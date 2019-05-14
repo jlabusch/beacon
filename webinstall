@@ -17,7 +17,7 @@ function install_dep_or_quit(){
     case "${DISTRIB_ID}" in
         Ubuntu)
             echo "Missing \"$1\"; trying to install" >&2
-            apt-get update && apt-get install "$1" || error "Couldn't install $1"
+            apt-get update && apt-get install -y "$1" || error "Couldn't install $1"
             ;;
         *)
             error "Please install \"$1\" first"

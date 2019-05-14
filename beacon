@@ -222,10 +222,10 @@ function run_beacon(){
     if [ "${INTERACTIVE}" = "Y" ]; then
         # Turning off strict host key checking is bad; we only do it
         # because the very first connection can't capture user input.
-        ssh -o "StrictHostKeyChecking no" -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
+        ssh -o "StrictHostKeyChecking no" -o "ServerAliveInterval 30" -o "TCPKeepAlive yes" -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
     else
         screen -d -m -S beacon \
-        ssh -o "StrictHostKeyChecking no" -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
+        ssh -o "StrictHostKeyChecking no" -o "ServerAliveInterval 30" -o "TCPKeepAlive yes" -i ${SSH_KEY} -R ${PORT}:localhost:22 -N -T -l ${SSH_USER:-${USER}} ${TUNNEL_HOST}
     fi
 }
 
