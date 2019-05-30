@@ -81,7 +81,7 @@ Firefox I'd immediately recommend using something like FoxyProxy. YMMV.
 
 The easiest way to install beacon is with the interactive installer:
 
-    curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.7/webinstall | sudo bash
+    curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.8/webinstall | sudo bash
 
 The installer will create `/usr/local/bin/beacon`, prompt for configuration and
 add the job to `/etc/crontab`.

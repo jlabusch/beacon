@@ -101,7 +101,7 @@ PROXYING WEB APPLICATIONS
 INSTALLATION
     The easiest way to install beacon is with the interactive installer:
 
-        curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.7/webinstall | sudo bash
+        curl -s https://raw.githubusercontent.com/jlabusch/beacon/v1.0.8/webinstall | sudo bash
 
     The installer will create ${H_TT_b}/usr/local/bin/beacon${H_TT_b}, prompt for configuration and
     add the job to ${H_TT_b}/etc/crontab${H_TT_b}.
@@ -215,7 +215,7 @@ while true; do
 done
 
 function get_port_from_dns(){
-    PORT=$(dig +noall +answer -t TXT ${BEACON_ID}.${BEACON_DOMAIN} | cut -d\" -f2)
+    PORT=$(dig +noall +answer -t TXT ${BEACON_ID}.${BEACON_DOMAIN} | grep TXT | cut -d\" -f2)
 }
 
 function run_beacon(){
