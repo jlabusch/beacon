@@ -21,7 +21,7 @@ for i in $*; do
     printf "$i:\t"
     PORT=$(dig +short -t TXT $i.${DOMAIN} | tr -d '"')
     if echo "${PORT}" | grep -q -E "52[0-9]{3}"; then
-        echo "${PORT}" | grep -q -E "${OPEN_PORTS}" && echo "${PORT} open" || echo "${PORT} closed"
+        echo "${PORT}" | grep -q -E "${OPEN_PORTS}" && echo "${PORT}   open" || echo "${PORT} closed"
     else
         echo "not requested"
     fi
